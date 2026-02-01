@@ -9,25 +9,22 @@ export default async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Headers', '*');
 
     if (req.method === 'OPTIONS') return res.status(200).end();
-    if (!url) return res.status(400).send('URL lazımdır.');
+    if (!url) return res.status(400).send('URL yoxdur.');
 
-    // Hansı kitabxanadan istifadə edəcəyimizi seçirik (http və ya https)
     const protocol = url.startsWith('https') ? https : http;
 
     protocol.get(url, {
         headers: {
+            // Bir çox server bu User-Agent-i tələb edir
             'User-Agent': 'VLC/3.0.11 LibVLC/3.0.11',
-            'Accept': '*/*',
             'Icy-MetaData': '1'
         },
-        rejectUnauthorized: false // Sertifikat xətalarını keçmək üçün
+        rejectUnauthorized: false 
     }, (proxyRes) => {
-        // Orijinal başlıqları (headers) pleyerə ötürürük
+        // Kanalın orijinal başlıqlarını ötürürük
         res.setHeader('Content-Type', proxyRes.headers['content-type'] || 'application/vnd.apple.mpegurl');
-        
-        // Yayımı birbaşa pleyerə "axıdırıq" (Stream)
         proxyRes.pipe(res);
     }).on('error', (e) => {
-        res.status(500).send('Proxy Bağlantı Xətası: ' + e.message);
+        res.status(500).send('Xəta: ' + e.message);
     });
 }
