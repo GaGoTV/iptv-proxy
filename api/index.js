@@ -1,43 +1,33 @@
+import https from 'https';
+import http from 'http';
+
 export default async function handler(req, res) {
     const { url } = req.query;
 
-    // Bütün brauzerlər və tətbiqlər üçün icazələr
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', '*');
 
-    if (req.method === 'OPTIONS') {
-        return res.status(200).end();
-    }
+    if (req.method === 'OPTIONS') return res.status(200).end();
+    if (!url) return res.status(400).send('URL lazımdır.');
 
-    if (!url) {
-        return res.status(400).send('URL parametresi lazımdır.');
-    }
+    // Hansı kitabxanadan istifadə edəcəyimizi seçirik (http və ya https)
+    const protocol = url.startsWith('https') ? https : http;
 
-    try {
-        const response = await fetch(url, {
-            headers: {
-                // Kanalların ən çox tanıdığı User-Agent
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36',
-                'Referer': url,
-                'Origin': new URL(url).origin
-            },
-            // Bağlantı müddəti (timeout) tənzimləməsi
-            redirect: 'follow'
-        });
-
-        if (!response.ok) {
-            throw new Error(`Kanal cavab vermir: ${response.status} ${response.statusText}`);
-        }
-
-        const contentType = response.headers.get('content-type');
-        res.setHeader('Content-Type', contentType || 'application/vnd.apple.mpegurl');
-
-        const buffer = await response.arrayBuffer();
-        return res.send(Buffer.from(buffer));
-
-    } catch (error) {
-        console.error("Proxy Xətası:", error.message);
-        return res.status(500).send('Proxy Xətası: ' + error.message);
-    }
+    protocol.get(url, {
+        headers: {
+            'User-Agent': 'VLC/3.0.11 LibVLC/3.0.11',
+            'Accept': '*/*',
+            'Icy-MetaData': '1'
+        },
+        rejectUnauthorized: false // Sertifikat xətalarını keçmək üçün
+    }, (proxyRes) => {
+        // Orijinal başlıqları (headers) pleyerə ötürürük
+        res.setHeader('Content-Type', proxyRes.headers['content-type'] || 'application/vnd.apple.mpegurl');
+        
+        // Yayımı birbaşa pleyerə "axıdırıq" (Stream)
+        proxyRes.pipe(res);
+    }).on('error', (e) => {
+        res.status(500).send('Proxy Bağlantı Xətası: ' + e.message);
+    });
 }
