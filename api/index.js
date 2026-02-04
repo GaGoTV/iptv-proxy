@@ -1,68 +1,73 @@
 import https from 'https';
 import http from 'http';
+import { URL } from 'url';
 
-// Sizin təqdim etdiyiniz User Agent siyahısı
 const userAgents = [
-    "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.7874.1190 Mobile Safari/537.36",
-    "Mozilla/5.0 (iPhone; CPU iPhone OS 11_0 like Mac OS X) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.7641.1982 Mobile Safari/537.36",
-    "Mozilla/5.0 (Linux; Android 5.0; SM-G900P Build/LRX21T) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.5741.1838 Mobile Safari/537.36",
-    "Mozilla/5.0 (iPhone; CPU iPhone OS 11_0 like Mac OS X) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.4561.1139 Mobile Safari/537.36",
-    "Mozilla/5.0 (Linux; Android 8.0; Pixel 2 Build/OPD3.170816.012) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2926.1511 Mobile Safari/537.36",
-    "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.3249.1975 Mobile Safari/537.36",
-    "Mozilla/5.0 (Linux; Android 5.0; SM-G900P Build/LRX21T) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.8322.1301 Mobile Safari/537.36",
-    "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.4985.1853 Mobile Safari/537.36",
-    "Mozilla/5.0 (Linux; Android 8.0; Pixel 2 Build/OPD3.170816.012) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.6876.1583 Mobile Safari/537.36",
-    "Mozilla/5.0 (Linux; Android 8.0; Pixel 2 Build/OPD3.170816.012) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.9608.1984 Mobile Safari/537.36",
-    "Mozilla/5.0 (Linux; Android 5.0; SM-G900P Build/LRX21T) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.7281.1957 Mobile Safari/537.36",
-    "Mozilla/5.0 (iPhone; CPU iPhone OS 11_0 like Mac OS X) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.9176.1124 Mobile Safari/537.36",
-    "Mozilla/5.0 (iPhone; CPU iPhone OS 11_0 like Mac OS X) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.5326.1199 Mobile Safari/537.36",
-    "Mozilla/5.0 (iPhone; CPU iPhone OS 11_0 like Mac OS X) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.5977.1563 Mobile Safari/537.36",
-    "Mozilla/5.0 (iPhone; CPU iPhone OS 11_0 like Mac OS X) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.6418.1021 Mobile Safari/537.36",
-    "Mozilla/5.0 (Linux; Android 5.0; SM-G900P Build/LRX21T) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.9543.1321 Mobile Safari/537.36",
-    "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.7475.1424 Mobile Safari/537.36",
-    "Mozilla/5.0 (iPhone; CPU iPhone OS 11_0 like Mac OS X) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.5685.1128 Mobile Safari/537.36",
-    "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.6100.1872 Mobile Safari/537.36",
-    "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.7966.1899 Mobile Safari/537.36",
-    "Mozilla/5.0 (Linux; Android 8.0; Pixel 2 Build/OPD3.170816.012) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.4892.1546 Mobile Safari/537.36",
-    "Mozilla/5.0 (iPhone; CPU iPhone OS 11_0 like Mac OS X) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.1327.1540 Mobile Safari/537.36",
-    "Mozilla/5.0 (Linux; Android 8.0; Pixel 2 Build/OPD3.170816.012) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.6217.1237 Mobile Safari/537.36",
-    "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.3282.1470 Mobile Safari/537.36",
-    "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2347.1648 Mobile Safari/537.36"
+    "Mozilla/5.0 (Linux; Android 10; Televizo Build/QP1A.190711.020) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.101 Mobile Safari/537.36",
+    "Televizo/1.9.3.2 (Linux; Android 11; SM-G973F)",
+    "VLC/3.0.11 LibVLC/3.0.11",
+    "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.7874.1190 Mobile Safari/537.36"
 ];
 
 export default async function handler(req, res) {
     const { url } = req.query;
 
-    // CORS Ayarları
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', '*');
+    if (!url) return res.status(400).send('URL daxil edilməyib.');
 
-    if (req.method === 'OPTIONS') return res.status(200).end();
-    if (!url) return res.status(400).send('URL yoxdur.');
+    // 1. Təsadüfi User-Agent seçimi
+    const selectedUA = userAgents[Math.floor(Math.random() * userAgents.length)];
 
-    // Siyahıdan təsadüfi bir User-Agent seçirik
-    const randomUserAgent = userAgents[Math.floor(Math.random() * userAgents.length)];
+    const targetUrl = new URL(url);
+    const protocol = targetUrl.protocol === 'https:' ? https : http;
 
-    const protocol = url.startsWith('https') ? https : http;
-
-    protocol.get(url, {
+    // 2. Televizo APK-nın adətən istifadə etdiyi headerlər
+    const options = {
+        method: 'GET',
         headers: {
-            'User-Agent': randomUserAgent,
-            'Icy-MetaData': '1',
+            'User-Agent': selectedUA,
             'Accept': '*/*',
-            'Connection': 'keep-alive'
+            'Accept-Language': 'az-AZ,az;q=0.9,en-US;q=0.8,en;q=0.7',
+            'Icy-MetaData': '1',
+            'Range': req.headers.range || 'bytes=0-',
+            'Connection': 'keep-alive',
+            'Referer': targetUrl.origin, // Bəzi serverlər referer tələb edir
+            'Host': targetUrl.host
         },
-        rejectUnauthorized: false 
-    }, (proxyRes) => {
-        // Gələn cavabın tipini təyin edirik
-        const contentType = proxyRes.headers['content-type'] || 'application/vnd.apple.mpegurl';
-        res.setHeader('Content-Type', contentType);
+        rejectUnauthorized: false // Sertifikat xətalarını keçmək üçün
+    };
+
+    const proxyRequest = protocol.get(url, options, (proxyRes) => {
+        // 3. Cavab başlıqlarını Televizoya uyğun tənzimləyirik
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Content-Type', proxyRes.headers['content-type'] || 'video/mp2t');
         
-        // Streami yönləndiririk
+        // Video axınının davamlılığı üçün lazımi başlıqlar
+        if (proxyRes.headers['content-length']) {
+            res.setHeader('Content-Length', proxyRes.headers['content-length']);
+        }
+        if (proxyRes.headers['content-range']) {
+            res.setHeader('Content-Range', proxyRes.headers['content-range']);
+        }
+        if (proxyRes.headers['transfer-encoding']) {
+            res.setHeader('Transfer-Encoding', proxyRes.headers['transfer-encoding']);
+        }
+
+        // Status kodunu ötürürük (məsələn 206 Partial Content)
+        res.writeHead(proxyRes.statusCode);
+
+        // 4. Stream-i (datanı) birbaşa Televizoya ötürürük
         proxyRes.pipe(res);
-    }).on('error', (e) => {
-        console.error('Proxy Error:', e.message);
-        res.status(500).send('Xəta: ' + e.message);
+    });
+
+    proxyRequest.on('error', (e) => {
+        console.error('Xəta:', e.message);
+        if (!res.headersSent) {
+            res.status(500).send('Stream xətası: ' + e.message);
+        }
+    });
+
+    // 5. Əgər istifadəçi (Televizo) yayımı bağlayarsa, server yükünü dayandır
+    req.on('close', () => {
+        proxyRequest.destroy();
     });
 }
